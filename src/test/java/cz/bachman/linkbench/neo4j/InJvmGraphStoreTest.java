@@ -1,9 +1,13 @@
 package cz.bachman.linkbench.neo4j;
 
-import com.facebook.LinkBench.*;
+import com.facebook.LinkBench.DummyLinkStore;
+import com.facebook.LinkBench.GraphStoreTestBase;
+import com.facebook.LinkBench.Phase;
 import com.facebook.LinkBench.store.GraphStore;
 
 import java.util.Properties;
+
+import static cz.bachman.linkbench.neo4j.Neo4jTestUtils.loadNeo4jProps;
 
 public abstract class InJvmGraphStoreTest extends GraphStoreTestBase {
 
@@ -18,6 +22,13 @@ public abstract class InJvmGraphStoreTest extends GraphStoreTestBase {
     @Override
     protected int getRequestCount() {
         return 10000;
+    }
+
+    @Override
+    protected Properties basicProps() {
+        Properties properties = super.basicProps();
+        loadNeo4jProps(properties);
+        return properties;
     }
 
     @Override

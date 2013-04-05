@@ -4,12 +4,10 @@ import com.facebook.LinkBench.Phase;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.helpers.collection.MapUtil;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -18,51 +16,57 @@ import java.util.Properties;
 public class EmbeddedNeo4jGraphStore extends Neo4jGraphStore {
 
     private static final Logger LOG = Logger.getLogger(EmbeddedNeo4jGraphStore.class);
-
-    public EmbeddedNeo4jGraphStore() {
-        recreateDatabase(true);
-    }
+    private Properties properties;
 
     @Override
-    public void initialize(Properties p, Phase currentPhase, int threadId) {
-        recreateDatabase(false);
+    public void initialize(Properties properties, Phase currentPhase, int threadId) {
+        if (db == null) {
+            this.properties = properties;
+            createDatabase();
+        }
+        else {
+            LOG.warn("Database already initialized, ignoring...");
+        }
     }
 
     @Override
     public void resetNodeStore(String dbid, long startID) throws Exception {
         super.resetNodeStore(dbid, startID);
-        recreateDatabase(true);
+        recreateDatabase();
     }
 
     @Override
     public void close() {
         if (db != null) {
             db.shutdown();
+            db = null;
         }
+    }
+
+    private void recreateDatabase() {
+        deleteDatabase();
+        createDatabase();
     }
 
     /**
-     * Recreate the database.
-     *
-     * @param deleteOld whether to delete the files with data (true) or not (false).
+     * Create the database.
      */
-    private void recreateDatabase(boolean deleteOld) {
-        close();
-
-        if (deleteOld) {
-            try {
-                FileUtils.deleteDirectory(new File(getStoreDir()));
-            } catch (IOException e) {
-                LOG.error("Could not delete old database: " + e.getMessage());
-            }
-        }
-
-        db = new EmbeddedGraphDatabase(getStoreDir(), loadProps());
+    private void createDatabase() {
+        db = new EmbeddedGraphDatabase(getStoreDir(properties), propertiesToMap(properties));
         registerShutdownHook(db);
     }
 
-    private String getStoreDir() {
-        return loadProps().get("store_dir");
+    private void deleteDatabase() {
+        close();
+        try {
+            FileUtils.deleteDirectory(new File(getStoreDir(properties)));
+        } catch (IOException e) {
+            LOG.error("Could not delete old database: " + e.getMessage());
+        }
+    }
+
+    private String getStoreDir(Properties properties) {
+        return propertiesToMap(properties).get("store_dir");
     }
 
     private static void registerShutdownHook(final GraphDatabaseService graphDb) {

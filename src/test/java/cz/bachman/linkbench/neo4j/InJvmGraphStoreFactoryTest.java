@@ -1,14 +1,12 @@
 package cz.bachman.linkbench.neo4j;
 
 
-import com.facebook.LinkBench.store.GraphStoreFactory;
 import com.facebook.LinkBench.store.LinkStore;
 import com.facebook.LinkBench.store.NodeStore;
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertTrue;
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertNotNull;
 
 public abstract class InJvmGraphStoreFactoryTest {
 

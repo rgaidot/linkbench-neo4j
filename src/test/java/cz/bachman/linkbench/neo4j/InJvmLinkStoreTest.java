@@ -7,6 +7,8 @@ import com.facebook.LinkBench.store.LinkStore;
 
 import java.util.Properties;
 
+import static cz.bachman.linkbench.neo4j.Neo4jTestUtils.loadNeo4jProps;
+
 public abstract class InJvmLinkStoreTest extends LinkStoreTestBase {
 
     private LinkStore linkStore;
@@ -23,9 +25,16 @@ public abstract class InJvmLinkStoreTest extends LinkStoreTestBase {
     }
 
     @Override
+    protected Properties basicProps() {
+        Properties properties = super.basicProps();
+        loadNeo4jProps(properties);
+        return properties;
+    }
+
+    @Override
     protected void initStore(Properties properties) throws Exception {
         this.props = properties;
-        linkStore = createStore();
+        linkStore = new DummyLinkStore(createStore());
     }
 
     protected abstract LinkStore createStore();

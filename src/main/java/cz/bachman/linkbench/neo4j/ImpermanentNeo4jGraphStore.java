@@ -1,11 +1,8 @@
 package cz.bachman.linkbench.neo4j;
 
 import com.facebook.LinkBench.Phase;
-import org.neo4j.helpers.collection.MapUtil;
-import org.neo4j.kernel.EmbeddedGraphDatabase;
 import org.neo4j.test.ImpermanentGraphDatabase;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -13,13 +10,11 @@ import java.util.Properties;
  */
 public class ImpermanentNeo4jGraphStore extends Neo4jGraphStore {
 
-    ImpermanentNeo4jGraphStore() {
-        db = new ImpermanentGraphDatabase(loadProps());
-    }
-
     @Override
-    public void initialize(Properties p, Phase currentPhase, int threadId) throws Exception {
-        //Do nothing! This is an impermanent graph db, so re-creating it would lead to all data being lost!
+    public void initialize(Properties properties, Phase currentPhase, int threadId) throws Exception {
+        if (db == null) {
+            db = new ImpermanentGraphDatabase(propertiesToMap(properties));
+        }
     }
 
     @Override

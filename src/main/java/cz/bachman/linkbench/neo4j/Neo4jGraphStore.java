@@ -3,7 +3,9 @@ package cz.bachman.linkbench.neo4j;
 import com.facebook.LinkBench.*;
 import com.facebook.LinkBench.Node;
 import com.facebook.LinkBench.store.GraphStore;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
+import org.apache.velocity.texen.util.PropertiesUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.RelationshipIndex;
@@ -41,13 +43,8 @@ public abstract class Neo4jGraphStore extends GraphStore {
      *
      * @return properties as a map
      */
-    protected Map<String, String> loadProps() {
-        try {
-            return MapUtil.load(this.getClass().getClassLoader().getResourceAsStream("neo4j.properties"));
-        } catch (IOException e) {
-            LOG.error("Unable to load Neo4j properties");
-            throw new IllegalStateException(e);
-        }
+    protected static Map<String, String> propertiesToMap(Properties properties) {
+        return new HashMap<String, String>((Map) properties);
     }
 
     @Override
