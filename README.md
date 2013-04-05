@@ -11,7 +11,7 @@ Project Status
 
 Please note that this project is in a very early stage. Some modifications of LinkBench were needed to get this connector
 written, so this version only works with [this fork](https://github.com/bachmanm/linkbench) of LinkBench. For more details,
-read [this blog post](http://bachman.cz). Eventually, when changes are pulled into LinkBench, the connector will
+read [this blog post](http://www.bachman.cz/2013/04/benchmarking-neo4j-with-facebook-graph/). Eventually, when changes are pulled into LinkBench, the connector will
 be integrated into the LinkBench repository as well.
 
 Compiling the Project
