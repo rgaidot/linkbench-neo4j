@@ -2,17 +2,18 @@ package cz.bachman.linkbench.neo4j;
 
 import com.facebook.LinkBench.*;
 import com.facebook.LinkBench.Node;
+import com.facebook.LinkBench.store.GraphStore;
 import org.apache.log4j.Logger;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.RelationshipIndex;
-import org.neo4j.test.ImpermanentGraphDatabase;
+import org.neo4j.helpers.collection.MapUtil;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static cz.bachman.linkbench.neo4j.IdGenerationRule.*;
+import static cz.bachman.linkbench.neo4j.IdGenerationStrategy.*;
 
 /**
  * Connector to Neo4j.
@@ -34,6 +35,20 @@ public abstract class Neo4jGraphStore extends GraphStore {
     protected GraphDatabaseService db;
 
     private final AtomicLong idGenerator = new AtomicLong(1);
+
+    /**
+     * Load properties for Neo4j graph database, stored in resources/neo4j.properties
+     *
+     * @return properties as a map
+     */
+    protected Map<String, String> loadProps() {
+        try {
+            return MapUtil.load(this.getClass().getClassLoader().getResourceAsStream("neo4j.properties"));
+        } catch (IOException e) {
+            LOG.error("Unable to load Neo4j properties");
+            throw new IllegalStateException(e);
+        }
+    }
 
     @Override
     public void clearErrors(int i) {
@@ -316,14 +331,14 @@ public abstract class Neo4jGraphStore extends GraphStore {
 
     //---------- (Neo) Node manipulations ------------
 
-    private long createNodeInTransaction(final Node node, final IdGenerationRule idGenerationRule) {
+    private long createNodeInTransaction(final Node node, final IdGenerationStrategy idGenerationStrategy) {
         return doInTransaction(new TransactionCallback<Long>() {
             @Override
             public Long doInTransaction() {
                 org.neo4j.graphdb.Node created = nodeToNeoNode(db.createNode(), node);
 
-                if (GENERATE_ALWAYS.equals(idGenerationRule)
-                        || (GENERATE_IF_MINUS_ONE.equals(idGenerationRule) && -1L == (Long) created.getProperty(ID))) {
+                if (GENERATE_ALWAYS.equals(idGenerationStrategy)
+                        || (GENERATE_IF_MINUS_ONE.equals(idGenerationStrategy) && -1L == (Long) created.getProperty(ID))) {
                     long id = idGenerator.getAndIncrement();
 
                     //there could be nodes inserted from relationship creation
