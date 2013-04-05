@@ -11,7 +11,7 @@ import java.util.Properties;
 public class ImpermanentNeo4jGraphStore extends Neo4jGraphStore {
 
     @Override
-    public void initialize(Properties properties, Phase currentPhase, int threadId) throws Exception {
+    public synchronized void initialize(Properties properties, Phase currentPhase, int threadId) throws Exception {
         if (db == null) {
             db = new ImpermanentGraphDatabase(propertiesToMap(properties));
         }
@@ -23,7 +23,7 @@ public class ImpermanentNeo4jGraphStore extends Neo4jGraphStore {
     }
 
     @Override
-    public void resetNodeStore(String dbid, long startID) throws Exception {
+    public synchronized void resetNodeStore(String dbid, long startID) throws Exception {
         super.resetNodeStore(dbid, startID);
         ((ImpermanentGraphDatabase) db).cleanContent();
     }

@@ -215,7 +215,7 @@ public abstract class Neo4jGraphStore extends GraphStore {
             @Override
             public Void doInTransaction() {
                 for (int i = 0; i < nodes.size(); i++) {
-                    result[i] = createNodeInTransaction(nodes.get(i), GENERATE_IF_MINUS_ONE);
+                    result[i] = doCreateNode(nodes.get(i), GENERATE_IF_MINUS_ONE);
                 }
 
                 return null;
@@ -332,25 +332,29 @@ public abstract class Neo4jGraphStore extends GraphStore {
         return doInTransaction(new TransactionCallback<Long>() {
             @Override
             public Long doInTransaction() {
-                org.neo4j.graphdb.Node created = nodeToNeoNode(db.createNode(), node);
-
-                if (GENERATE_ALWAYS.equals(idGenerationStrategy)
-                        || (GENERATE_IF_MINUS_ONE.equals(idGenerationStrategy) && -1L == (Long) created.getProperty(ID))) {
-                    long id = idGenerator.getAndIncrement();
-
-                    //there could be nodes inserted from relationship creation
-                    while (nodeIndex().get(ID, (Long) id).getSingle() != null) {
-                        id = idGenerator.getAndIncrement();
-                    }
-
-                    created.setProperty(ID, id);
-                }
-
-                nodeIndex().add(created, ID, (Long) created.getProperty(ID));
-
-                return (Long) created.getProperty(ID);
+                return doCreateNode(node, idGenerationStrategy);
             }
         });
+    }
+
+    private long doCreateNode(Node node, IdGenerationStrategy idGenerationStrategy) {
+        org.neo4j.graphdb.Node created = nodeToNeoNode(db.createNode(), node);
+
+        if (GENERATE_ALWAYS.equals(idGenerationStrategy)
+                || (GENERATE_IF_MINUS_ONE.equals(idGenerationStrategy) && -1L == (Long) created.getProperty(ID))) {
+            long id = idGenerator.getAndIncrement();
+
+            //there could be nodes inserted from relationship creation
+            while (nodeIndex().get(ID, (Long) id).getSingle() != null) {
+                id = idGenerator.getAndIncrement();
+            }
+
+            created.setProperty(ID, id);
+        }
+
+        nodeIndex().add(created, ID, (Long) created.getProperty(ID));
+
+        return (Long) created.getProperty(ID);
     }
 
     protected org.neo4j.graphdb.Node getNodeById(long id, boolean createIfMissing) {
