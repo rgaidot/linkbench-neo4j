@@ -5,8 +5,8 @@ import com.facebook.LinkBench.store.LinkStore;
 import com.facebook.LinkBench.store.NodeStore;
 import org.junit.Test;
 
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public abstract class InJvmGraphStoreFactoryTest {
 

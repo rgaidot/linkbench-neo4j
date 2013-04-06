@@ -1,17 +1,16 @@
 package cz.bachman.linkbench.neo4j;
 
-import com.facebook.LinkBench.*;
+import com.facebook.LinkBench.Link;
+import com.facebook.LinkBench.LinkCount;
 import com.facebook.LinkBench.Node;
 import com.facebook.LinkBench.store.GraphStore;
-import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.apache.velocity.texen.util.PropertiesUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.RelationshipIndex;
-import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.kernel.DeadlockDetectedException;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -26,6 +25,10 @@ public abstract class Neo4jGraphStore extends GraphStore {
 
     private static final Logger LOG = Logger.getLogger(Neo4jGraphStore.class);
 
+    static {
+        BasicConfigurator.configure();
+    }
+
     //names of Neo4j properties
     protected static final String ID = "id";
     protected static final String TIME = "time";
@@ -33,6 +36,8 @@ public abstract class Neo4jGraphStore extends GraphStore {
     protected static final String VERSION = "version";
     protected static final String DATA = "data";
     protected static final String VISIBILITY = "visibility";
+
+    private static final int BULK_LOAD_MAX_RETRY_COUNT = 5;
 
     protected GraphDatabaseService db;
 
@@ -227,21 +232,33 @@ public abstract class Neo4jGraphStore extends GraphStore {
 
     @Override
     public int bulkLoadBatchSize() {
-        return 10000;
+        return 1000;
     }
 
     @Override
-    public void addBulkLinks(String dbid, final List<Link> links, boolean noinverse) throws Exception {
-        doInTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void doInTransaction() {
-                for (Link link : links) {
-                    doAddLink(link);
-                }
+    public void addBulkLinks(String dbid, final List<Link> links, boolean noinverse) {
 
-                return null;
+
+        for (int i = 0; i < BULK_LOAD_MAX_RETRY_COUNT; i++) {
+            try {
+                doInTransaction(new TransactionCallback<Void>() {
+                    @Override
+                    public Void doInTransaction() {
+                        for (Link link : links) {
+                            doAddLink(link);
+                        }
+                        return null;
+                    }
+                });
+
+                return;
+            } catch (DeadlockDetectedException e) {
+                LOG.warn("Deadlock detected, retry number " + i + 1);
             }
-        });
+        }
+
+        LOG.warn("Did not manage to load links in bulk within " + BULK_LOAD_MAX_RETRY_COUNT + " retries.");
+        throw new DeadlockDetectedException("Did not manage to load links in bulk within " + BULK_LOAD_MAX_RETRY_COUNT + " retries.");
     }
 
     @Override

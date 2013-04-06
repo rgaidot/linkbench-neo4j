@@ -21,7 +21,7 @@ public abstract class InJvmGraphStoreTest extends GraphStoreTestBase {
 
     @Override
     protected int getRequestCount() {
-        return 10000;
+        return 5000;
     }
 
     @Override

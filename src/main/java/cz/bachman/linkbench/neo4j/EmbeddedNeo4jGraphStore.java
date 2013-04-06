@@ -85,7 +85,6 @@ public class EmbeddedNeo4jGraphStore extends Neo4jGraphStore {
             @Override
             public void run() {
                 graphDb.shutdown();
-                deleteDatabaseFiles(properties);
             }
         });
     }
