@@ -18,7 +18,7 @@ Compiling the Project
 ---------------------
 
 First of all, you need to clone the forked LinkBench repository and install the artifacts into your local maven repo.
-The following sequence of commands should achieve that, assuming you have Maven installed.
+The following sequence of commands should achieve that, assuming you have **Maven** installed as well as **Java 7**.
 
     git clone https://github.com/bachmanm/linkbench
     cd linkbench
@@ -46,6 +46,14 @@ For now, only a single embedded (i.e. in-JVM) instance of Neo4j is supported. It
 
 Make sure you understand what the Neo4j memory configurations mean. A good place to start
 is the [Neo4j Documentation](http://docs.neo4j.org/chunked/milestone/embedded-configuration.html).
+
+A typical data load command would look something like
+
+    ./bin/linkbench -c config/LinkConfigNeo4j.properties -l
+
+and a typical request command would be
+
+    ./bin/linkbench -c config/LinkConfigNeo4j.properties -r
 
 Have fun!
 

@@ -8,6 +8,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.RelationshipIndex;
 import org.neo4j.kernel.DeadlockDetectedException;
 
@@ -253,7 +254,7 @@ public abstract class Neo4jGraphStore extends GraphStore {
 
                 return;
             } catch (DeadlockDetectedException e) {
-                LOG.warn("Deadlock detected, retry number " + i + 1);
+                LOG.warn("Deadlock detected, retry number " + String.valueOf(i + 1));
             }
         }
 
@@ -336,7 +337,19 @@ public abstract class Neo4jGraphStore extends GraphStore {
             return null;
         }
 
-        return relationshipIndex().get(TYPE, String.valueOf(linkType), neoNode1, neoNode2).getSingle();
+        IndexHits<Relationship> relationships = relationshipIndex().get(TYPE, String.valueOf(linkType), neoNode1, neoNode2);
+        if (!relationships.hasNext()) {
+            return null;
+        }
+
+        Relationship toReturn = relationships.next();
+
+        while (relationships.hasNext()) {
+            LOG.warn("Multiple relationships of the same type between the same nodes detected, deleting them...");
+            deleteLinkInTransaction(relationships.next());
+        }
+
+        return toReturn;
     }
 
     private RelationshipIndex relationshipIndex() {
